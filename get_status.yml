@@ -11,7 +11,7 @@
     database: passwd
 
 - set_fact:
-    services_running: "{{ ansible_facts['services'].values() | selectattr('state','equalto','running')  }}"
+    services_running: "{{ ansible_facts['services']  | dict2items | json_query('[?value.state==`running`]') | map(attribute='value') | list  }}"
     users_sh: "{{ getent_passwd | dict2items | selectattr('value', 'contains', '/bin/bash')| map(attribute='key') }}"
     mounts: "{{  ansible_mounts | json_query('[].{device: device, mount: mount}') }}"
 
@@ -38,7 +38,7 @@
     crontab_by_user: "{{ (item.stdout_lines | rejectattr('0', 'match', '^#'))  | json_query('[].{name: @ , '+ query +' }')}}"
   vars:
     query: "user: `{{ item.item }}`"
-  with_items: "{{ crontab_output.results  |  selectattr('rc', 'equalto', 0)  | list }}"
+  with_items: "{{ crontab_output.results | json_query('[?rc==`0`]') | list }}"
   register: crontab_output
 
 - name: Set facts crontab

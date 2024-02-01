@@ -3,6 +3,7 @@
   hosts: localhost
   connection: local
   gather_facts: yes
+  become: true
   vars_files:
     - vars.yml
   tasks:
@@ -21,9 +22,14 @@
       set_fact:
         last_file: "{{ files.files | sort(attribute='path')  | last  }}"
 
+    - name: Slurp content of file
+      slurp:
+        src: "{{ last_file.path }}"
+      register: file_content
+
     - name: Load snapshot
       set_fact:
-        snaphost: "{{ lookup('file', last_file.path) | from_yaml }}"
+        snaphost: "{{ file_content.content | b64decode | from_yaml }}"
 
     - name: Print out Delta services
       debug:
