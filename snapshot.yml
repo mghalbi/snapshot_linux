@@ -1,0 +1,73 @@
+---
+- name: Snapshot status macchine
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Get status macchine
+      import_tasks: get_status.yml
+
+    - set_fact:
+        snapshot_file: "{{ snapshot_path }}{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}.yml"
+
+    - name: Create base folder snapshot at {{ snapshot_path }}
+      file:
+        path: "{{ snapshot_path }}"
+        state: directory
+
+    #---------- SNAPSHOT SERVICIES ----------#
+
+    - name: Snapshot Servicies
+      copy:
+        dest: "{{ snapshot_file }}"
+        content: "{{ {'services': services_running}  |  to_yaml  }}"
+
+    #---------- SNAPSHOT TCP AND UPD PORTS ----------#
+
+    - name: Snapshot Ports
+      blockinfile:
+        dest: "{{ snapshot_file }}"
+        content: "{{ {'ports': ports }  |  to_yaml  }}"
+        marker: ""
+
+    #---------- SNAPSHOT MOUNT POINTS ----------#
+
+    - name: Snapshot Mount points
+      blockinfile:
+        dest: "{{ snapshot_file }}"
+        content: "{{ {'mounts': mounts }  |  to_yaml  }}"
+        marker: ""
+
+    #---------- SNAPSHOT PROCESS ----------#
+
+    # - name: Snapshot Process
+    #   blockinfile:
+    #     dest: "{{ snapshot_file }}"
+    #     content: "{{ {'process': process }  |  to_yaml  }}"
+    #     marker: ""
+
+    #---------- SNAPSHOT CRONTAB ----------#
+
+    - name: Snapshot Crontab
+      blockinfile:
+        dest: "{{ snapshot_file }}"
+        content: "{{ {'crontab': crontab }  |  to_yaml  }}"
+        marker: ""
+
+    #---------- SNAPSHOT ENVS ----------#
+
+    - name: Snapshot envs
+      blockinfile:
+        dest: "{{ snapshot_file }}"
+        content: "{{ {'envs': envs }  |  to_yaml  }}"
+        marker: ""
+
+    #---------- SNAPSHOT ALIAS ----------#
+
+    - name: Snapshot alias
+      blockinfile:
+        dest: "{{ snapshot_file }}"
+        content: "{{ {'alias': alias }  |  to_yaml  }}"
+        marker: ""

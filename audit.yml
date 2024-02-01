@@ -1,0 +1,50 @@
+---
+- name: snapshot status macchine
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Get status macchine
+      import_tasks: get_status.yml
+
+    - name: Find files in the folder
+      find:
+        paths: "{{ snapshot_path }}"
+        patterns: "*.yml"
+      register: files
+
+    # Throw error if folder dosent exist or is empty
+
+    - name: Get the last file snapshot
+      set_fact:
+        last_file: "{{ files.files | sort(attribute='path')  | last  }}"
+
+    - name: Load snapshot
+      set_fact:
+        snaphost: "{{ lookup('file', last_file.path) | from_yaml }}"
+
+    - name: Print out Delta services
+      debug:
+        msg: "{{ snaphost['services'] | difference(services_running ) }}"
+
+    - name: Print out Delta ports
+      debug:
+        msg: "{{ snaphost['ports'] | difference(ports) }}"
+
+    - name: Print out Delta Mount
+      debug:
+        msg: "{{ snaphost['mounts'] | difference(mounts) }}"
+
+    - name: Print out Delta crontab
+      debug:
+        msg: "{{ snaphost['crontab'] | difference(crontab) }}"
+
+    - name: Print out Delta envs
+      debug:
+        msg: "{{ snaphost['envs'] | difference(envs) }}"
+
+    - name: Print out Delta alias
+      debug:
+        msg: "{{ snaphost['alias'] | difference(alias) }}"
