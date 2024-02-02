@@ -1,2 +1,4 @@
 ---
 snapshot_path: "/home/mohsen/snapshot_linux/snapshot/"
+user: mohsen
+group: mohsen

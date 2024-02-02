@@ -16,6 +16,8 @@
       file:
         path: "{{ snapshot_path }}"
         state: directory
+        owner: "{{ user }}"
+        group: "{{ group }}"
 
     #---------- SNAPSHOT SERVICIES ----------#
 

@@ -7,8 +7,15 @@
   vars_files:
     - vars.yml
   tasks:
-    - name: Get status macchine
-      import_tasks: get_status.yml
+    - name: Check if folder exists
+      stat:
+        path: "{{ snapshot_path }}"
+      register: folder_stat
+
+    - name: Fail if folder does not exist
+      fail:
+        msg: "The folder {{ snapshot_path }} does not exist."
+      when: not folder_stat.stat.exists
 
     - name: Find files in the folder
       find:
@@ -16,7 +23,13 @@
         patterns: "*.yml"
       register: files
 
-    # Throw error if folder dosent exist or is empty
+    - name: Fail if not found files
+      fail:
+        msg: "not files found."
+      when: files.files | length == 0
+
+    - name: Get status macchine
+      import_tasks: get_status.yml
 
     - name: Get the last file snapshot
       set_fact:
