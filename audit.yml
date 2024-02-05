@@ -1,5 +1,5 @@
 ---
-- name: snapshot status macchine
+- name: Audit macchine
   hosts: localhost
   connection: local
   gather_facts: yes
@@ -17,7 +17,7 @@
         msg: "The folder {{ snapshot_path }} does not exist."
       when: not folder_stat.stat.exists
 
-    - name: Find files in the folder
+    - name: Find snpashot files in the folder base at "{{ snapshot_path }}"
       find:
         paths: "{{ snapshot_path }}"
         patterns: "*.yml"
@@ -25,7 +25,7 @@
 
     - name: Fail if not found files
       fail:
-        msg: "not files found."
+        msg: "Not files found."
       when: files.files | length == 0
 
     - name: Get the last file snapshot

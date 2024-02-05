@@ -1,12 +1,12 @@
 ---
-- name: Snapshot status macchine
+- name: Snapshot Machine Status
   hosts: localhost
   connection: local
   gather_facts: yes
   vars_files:
     - vars.yml
   tasks:
-    - name: Get status macchine
+    - name: Retrieve Machine Status
       import_tasks: get_status.yml
 
     - set_fact:

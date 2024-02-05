@@ -1,5 +1,5 @@
 ---
-- name: "Gather facts on  service"
+- name: Gather facts on  service
   service_facts:
 
 - setup:
