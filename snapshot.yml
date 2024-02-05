@@ -25,6 +25,8 @@
       copy:
         dest: "{{ snapshot_file }}"
         content: "{{ {'services': services_running}  |  to_yaml  }}"
+        owner: "{{ user }}"
+        group: "{{ group }}"
 
     #---------- SNAPSHOT TCP AND UPD PORTS ----------#
 
@@ -41,14 +43,6 @@
         dest: "{{ snapshot_file }}"
         content: "{{ {'mounts': mounts }  |  to_yaml  }}"
         marker: ""
-
-    #---------- SNAPSHOT PROCESS ----------#
-
-    # - name: Snapshot Process
-    #   blockinfile:
-    #     dest: "{{ snapshot_file }}"
-    #     content: "{{ {'process': process }  |  to_yaml  }}"
-    #     marker: ""
 
     #---------- SNAPSHOT CRONTAB ----------#
 
@@ -72,4 +66,12 @@
       blockinfile:
         dest: "{{ snapshot_file }}"
         content: "{{ {'alias': alias }  |  to_yaml  }}"
+        marker: ""
+
+    #---------- SNAPSHOT PROCESS ----------#
+
+    - name: Snapshot Process
+      blockinfile:
+        dest: "{{ snapshot_file }}"
+        content: "{{ {'process': process }  |  to_yaml  }}"
         marker: ""

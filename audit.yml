@@ -28,9 +28,6 @@
         msg: "not files found."
       when: files.files | length == 0
 
-    - name: Get status macchine
-      import_tasks: get_status.yml
-
     - name: Get the last file snapshot
       set_fact:
         last_file: "{{ files.files | sort(attribute='path')  | last  }}"
@@ -44,26 +41,27 @@
       set_fact:
         snaphost: "{{ file_content.content | b64decode | from_yaml }}"
 
-    - name: Print out Delta services
-      debug:
-        msg: "{{ snaphost['services'] | difference(services_running ) }}"
+    - name: Get status macchine
+      import_tasks: get_status.yml
 
-    - name: Print out Delta ports
-      debug:
-        msg: "{{ snaphost['ports'] | difference(ports) }}"
+    - name: Print out Delta status macchine
+      set_fact:
+        delta:
+          services: "{{ snaphost['services'] | difference(services_running) }}"
+          ports: "{{ snaphost['ports'] | difference(ports) }}"
+          mounts: "{{ snaphost['mounts'] | difference(mounts) }}"
+          crontab: "{{ snaphost['crontab'] | difference(crontab) }}"
+          envs: "{{ snaphost['envs'] | difference(envs) }}"
+          alias: "{{ snaphost['alias'] | difference(alias) }}"
 
-    - name: Print out Delta Mount
-      debug:
-        msg: "{{ snaphost['mounts'] | difference(mounts) }}"
-
-    - name: Print out Delta crontab
-      debug:
-        msg: "{{ snaphost['crontab'] | difference(crontab) }}"
-
-    - name: Print out Delta envs
-      debug:
-        msg: "{{ snaphost['envs'] | difference(envs) }}"
-
-    - name: Print out Delta alias
-      debug:
-        msg: "{{ snaphost['alias'] | difference(alias) }}"
+    - name: Check if any delta list is not empty
+      assert:
+        that:
+          - delta.services | length == 0
+          - delta.ports | length == 0
+          - delta.mounts | length == 0
+          - delta.crontab | length == 0
+          - delta.envs | length == 0
+          - delta.alias | length == 0
+        fail_msg: "Non-empty delta lists: services={{ delta.services }}, ports={{ delta.ports }}, mounts={{ delta.mounts }}, crontab={{ delta.crontab }}, envs={{ delta.envs }}, alias={{ delta.alias  }}"
+        success_msg: "All delta lists are empty. No differences found."

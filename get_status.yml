@@ -82,6 +82,7 @@
 - name: Set fact alias
   set_fact:
     alias: "{{ alias_result.results | map(attribute='ansible_facts.alias_by_user') | list | flatten }}"
+
 #---------- GET PROCESS ----------#
 # - name: Run the 'ps' command
 #   shell: ps -e -o comm | awk 'NR>2 {print last} {last=$0}'
@@ -90,3 +91,7 @@
 # - name: Set facts process
 #   set_fact:
 #     process: "{{  process_output.stdout_lines | unique  | map('regex_replace', '^(.+)$','{command: \\1}') | map('from_yaml') | list }}"
+
+- name: Set facts process
+  set_fact:
+    process: []
