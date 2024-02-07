@@ -2,3 +2,6 @@
 snapshot_path: "/home/mohsen/snapshot_linux/snapshot/"
 user: mohsen
 group: mohsen
+processes_to_check:
+  - java
+  - apache2

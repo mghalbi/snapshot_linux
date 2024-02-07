@@ -31,14 +31,15 @@
   shell: "crontab  -u  {{ item }} -l"
   register: crontab_output
   failed_when: ('no crontab for ' not in crontab_output.stderr and crontab_output.rc != 0)
-  loop: "{{ (users_sh) }}"
+  loop: "{{ users_sh }}"
 
 - name: Filter list crontab
   set_fact:
     crontab_by_user: "{{ (item.stdout_lines | rejectattr('0', 'match', '^#'))  | json_query('[].{name: @ , '+ query +' }')}}"
+  no_log: true
   vars:
     query: "user: `{{ item.item }}`"
-  with_items: "{{ crontab_output.results | json_query('[?rc==`0`]') | list }}"
+  loop: "{{ crontab_output.results | json_query('[?rc==`0`]') | list }}"
   register: crontab_output
 
 - name: Set facts crontab
@@ -50,11 +51,12 @@
 - name: Get environment variables for each user
   shell: "sudo -u {{ item }} bash -i -c 'env' "
   register: env_output
-  loop: "{{ (users_sh) }}"
+  loop: "{{ users_sh }}"
 
 - name: Mapping of environment variables to objects
   set_fact:
     envs_by_user: "{{ item.stdout_lines  | json_query('[].{name: @ , '+ query +' }')}}"
+  no_log: true
   vars:
     query: "user: `{{ item.item }}`"
   with_items: "{{ env_output.results }}"
@@ -69,14 +71,15 @@
 - name: Get alias for each user
   shell: "sudo -u {{ item }} bash -i -c 'alias'"
   register: alias_output
-  loop: "{{ (users_sh) }}"
+  loop: "{{ users_sh }}"
 
 - name: Mapping of alias to objects
   set_fact:
     alias_by_user: "{{ item.stdout_lines  | json_query('[].{name: @ , '+ query +' }')}}"
+  no_log: true
   vars:
     query: "user: `{{ item.item }}`"
-  with_items: "{{ alias_output.results }}"
+  loop: "{{ alias_output.results }}"
   register: alias_result
 
 - name: Set fact alias
@@ -84,14 +87,17 @@
     alias: "{{ alias_result.results | map(attribute='ansible_facts.alias_by_user') | list | flatten }}"
 
 #---------- GET PROCESS ----------#
-# - name: Run the 'ps' command
-#   shell: ps -e -o comm | awk 'NR>2 {print last} {last=$0}'
-#   register: process_output
+- name: Run the 'ps' command
+  shell: ps aux --no-headers | grep "{{ item }}" | awk '{$1=""; $2=""; print substr($0, index($0,$11))}'
+  register: process_output
+  loop: "{{ processes_to_check }}"
 
-# - name: Set facts process
-#   set_fact:
-#     process: "{{  process_output.stdout_lines | unique  | map('regex_replace', '^(.+)$','{command: \\1}') | map('from_yaml') | list }}"
+- name: Mapping of alias to objects
+  set_fact:
+    process_by_query: "{{ item.stdout_lines  |  json_query('[].{command: @ }') }}"
+  loop: "{{ process_output.results }}"
+  register: process_result
 
 - name: Set facts process
   set_fact:
-    process: []
+    process: "{{  process_result.results | map(attribute='ansible_facts.process_by_query') | list | flatten }}"
